@@ -169,16 +169,16 @@ def save_parquet_and_mapping(config_name: str, df_config_dir: Path, one_target_d
      Dictionary that maps classes to their integer values represented in the "target" column.
     """
     parquet_name = f"{config_name}.parquet"
-    one_target_df.to_parquet(df_config_dir / parquet_name)
+    one_target_df.to_parquet(df_config_dir / parquet_name, index=False)
     print(f"\t\tCreated {parquet_name}.")
     
     json_name = f"{config_name}_mapping.json"
     json_mapping_file = df_config_dir / json_name
     
     # Create integer: class dictionary from class: integer dictionary
-    int_class_dict = {v:k for k,v in mapping.items()}
+    int_class_dict = {int(v):k for k,v in mapping.items()}
     with open(json_mapping_file, "w") as f:
-        json.dump(int_class_dict, f)
+        json.dump(int_class_dict, f, default=str)
     
     print(f"\t\tCreated {json_name}")
     return
@@ -204,8 +204,8 @@ def save_image_subset_config_files(img_df: DataFrame, subset_name: str, subset_d
     one_target_df: DataFrame
     mapping: dict[str, int]
     for target in target_list:
-        print(f"\tDataset configuration: {config_name}")
         config_name = f"{subset_name}_{target}"
+        print(f"\tDataset configuration: {config_name}")
         df_config_dir = subset_dir / config_name
 
         one_target_df = generate_single_target_df(img_df, target)
@@ -217,7 +217,7 @@ def save_image_subset_config_files(img_df: DataFrame, subset_name: str, subset_d
         # Save Dataframe as csv containing leaf_ID and target variable for association after embedding
         csv_name = f"{config_name}.csv"
         temp_df = img_df[["leaf_ID", target]]
-        temp_df.to_csv(df_config_dir / csv_name)
+        temp_df.to_csv(df_config_dir / csv_name, index=False)
         print(f"\t\tCreated {csv_name}.")
 
     return
@@ -232,7 +232,7 @@ def clean_dataset(df: DataFrame, plant_types: list[str], leaf_maps_path: Path) -
         temp_df = df[df["plant"] == plant]
         if temp_df["disease"].nunique() < 2:
             plants_to_drop.append(plant)  
-    df[~df['plant'].isin(plants_to_drop)]
+    df = df[~df['plant'].isin(plants_to_drop)]
     
     # Create DataFrame that maps image names to unique leaves
     leaf_map_lst = os.listdir(leaf_maps_path)
