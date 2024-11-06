@@ -54,9 +54,9 @@ run_df_analyze () {
 
 # run_df_analyze <df> <target> <outdir>
 run_df_analyze_cluster () {
-    ./run_python_with_home.sh python "$DF_ANALYZE" \
+    ./run_python_with_home.sh df-analyze.py \
         --df "$(realpath $1)" \
-        --target "$(realpath $2)" \
+        --target "$2" \
         --mode classify \
         --classifiers knn lgbm rf lr sgd dummy gandalf \
         --regressors knn lgbm rf elastic sgd dummy gandalf \
@@ -91,14 +91,17 @@ DF=$2
 OUT_DIR=$3
 LOCAL=$4
 
+curr_dir=$(pwd)
+
 # DF_EMBED="$DF_ANALYZE_PATH/df-embed.py"
 DF_ANALYZE="$DF_ANALYZE_PATH/df-analyze.py"
 
 if [ "$LOCAL" == "cluster" ]; then
     cd $DF_ANALYZE_PATH/containers
     ./build_container_cc.sh
-    cd ../..
-    ./run_python_with_home.sh "$DF" "target" "$OUT_DIR"
+    cd ..
+    echo current dir: $(pwd)
+    run_df_analyze_cluster "$curr_dir/$DF" "target" "~/scratch/$OUT_DIR"
 else
     ACTIVATE="$DF_ANALYZE_PATH/.venv/bin/activate"
     source "$ACTIVATE"
