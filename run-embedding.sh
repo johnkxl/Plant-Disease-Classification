@@ -17,7 +17,7 @@
 # 
 # `df-analyze-dirpath`  The directory containing df-analyze.py and df-embed.py
 # 
-# `data-dir`            The directory containing `datafile`
+# `data-dir`            The directory containing `data-file`
 # 
 # `data-file`           The file name of the parquet file containing images to 
 #                       be embedded. NOTE: this is not the relative path; just 
@@ -67,20 +67,21 @@ run_df_analyze () {
 
 # ~/dev/machine-learning/df-analyze
 DF_ANALYZE_PATH=$1
-DF_EMBED= "$DF_ANALYZE_PATH/df-embed.py"
-DF_ANALYZE= "$DF_ANALYZE_PATH/df-analyze.py"
-ACTIVATE= "$DF_ANALYZE_PATH/.venv/bin/activate"
+DF_EMBED="$DF_ANALYZE_PATH/df-embed.py"
+DF_ANALYZE="$DF_ANALYZE_PATH/df-analyze.py"
+ACTIVATE="$DF_ANALYZE_PATH/.venv/bin/activate"
 
 DATA_DIR=$2
 DATA=$3
 
-# dataset/color/<subset>
+# need third substring out of:
+# all_parquet_configs/all/by_plant(s)/<subset>
 subset_name=$(echo ${DATA_DIR} | cut -d '/' -f 3)
-outname= "$subset_name-results.parquet"
+outname="$subset_name-results.parquet"
 
-if [ ! -e "$DATA" ]
+if [ ! -e "$DATA_DIR/$DATA" ]
 then
-    echo "file $DATA does not exist" \n terminating execution...
+    echo "file $DATA does not exist" terminating execution...
     exit 1
 fi
 
@@ -93,7 +94,7 @@ python "$DF_EMBED" \
     --out "$DATA_DIR/$outname"
 
 # Save the image embeddings concatented with leaf IDs into a csv file
-python concat-embeddings-to-df.py "$DATA_DIR/$DATA_DIR.csv" "$DATA_DIR/$outname"
+python concat-embeddings-to-df.py "$DATA_DIR/$subset_name.csv" "$DATA_DIR/$outname"
 concat_df_stem=$(echo ${outname} | cut -d '.' -f 1)
 concat_df_file="$concat_df_stem-complete.csv" # name of resulting file
 

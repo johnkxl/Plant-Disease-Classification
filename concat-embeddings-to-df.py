@@ -11,6 +11,8 @@
 # 
 # ######################################################################
 
+# usage: python concat-embeddings-to-df.py <metadata.csv> <embedded.parquet>
+
 import sys
 import pandas as pd
 from pathlib import Path
@@ -27,7 +29,7 @@ def main() -> int:
     if meta_dir == embedded_dir:
         out_dir = out_dir / Path(meta_dir)
     
-    metadata_df = pd.read_parquet(METADATA_PATH)
+    metadata_df = pd.read_csv(METADATA_PATH)
     embedded_df = pd.read_parquet(EMBEDDED_PATH)
     df = metadata_df.join(embedded_df)
 
