@@ -28,8 +28,8 @@ def main() -> int:
     DATASET_PATH = Path(sys.argv[1])
     LEAF_MAPS_PATH = Path(sys.argv[2])
 
+    # Only images that are able to be associated with a leaf_ID are included
     df = load_dataframe(DATASET_PATH, LEAF_MAPS_PATH)
-    # print(df)
 
     # Final format of df
     # plant_ID : INTEGER unique for each subject
@@ -54,14 +54,13 @@ def load_dataframe(dataset_path: Path, leaf_maps_path: Path) -> DataFrame:
     """Returns DataFrame containing images loaded from `dataset_path`."""
     labels_dir  = os.listdir(dataset_path)
 
-    # img: Image  # PIL Image
-    # converted = []
     plant_types = []  # Plant Types
     plant_disease = []  # Plant_Disease pairs
     particular_diseases = []  # Just disease names
     img_names = []  # Unique names to associate images to a single subject
     file_names = []
 
+    # Identify plant and diseaase classes from filenames
     for label in labels_dir:
         plant, disease = label.split("___")
 
@@ -69,12 +68,6 @@ def load_dataframe(dataset_path: Path, leaf_maps_path: Path) -> DataFrame:
         images_with_label = os.listdir(label_path)
 
         for file in images_with_label:
-            # path = label_path / file
-            # img = Image.open(path)
-            # buf = BytesIO()
-            # img.save(buf, format="JPEG")
-            # byts = buf.getvalue()
-            # converted.append(byts)
             plant_disease.append(label)
             plant_types.append(plant)
             particular_diseases.append(disease)
@@ -97,6 +90,8 @@ def load_dataframe(dataset_path: Path, leaf_maps_path: Path) -> DataFrame:
     df = DataFrame(table)
     df = clean_dataset(df, plant_types, leaf_maps_path)
 
+    # Add Image bytes to corresponding records
+    # This is done last to reduce the total amount of Image conversions
     img: Image  # PIL Image
     converted = []
     indices = []
@@ -108,7 +103,6 @@ def load_dataframe(dataset_path: Path, leaf_maps_path: Path) -> DataFrame:
         byts = buf.getvalue()
         converted.append(byts)
         indices.append(row.full_name)
-        # df["image"] = byts
     
     image_df = DataFrame({"full_name":indices, "image": converted})
     df = df.join(image_df.set_index("full_name"), on="full_name")
@@ -281,36 +275,6 @@ def clean_dataset(df: DataFrame, plant_types: list[str], leaf_maps_path: Path) -
     df.loc[df["disease"] == "healthy", "disease_binary"] = 1
     return df
 
-
-# TODO:
-
-# make one Dataframe with 
-# IMAGE, PLANT_DISEASE, PLANT, DISEASE_MULTICLASS DISEASE_BINARY
-
-# assign numerical values to each class
-
-# remove plants with only one category
-
-# make separate DFs for each plant
-
-# make parquet files for each configuration of dataset
-# (rename label to "target")
-# with mapping JSON
-# and csv for concatedation after embedding
-
-
-# dataset configurations:
-# ALL_IMAGES:
-#   PLANT_DISEASE
-#   PLANT?? (probably not)
-#   DISEASE_BINARY
-# PER_PLANT
-#   DISEASE_MULTICLASS
-#   DISEASE_BINARY
-
-# all images dir
-#   | fruitType___diseaseStatus
-#       | images
 
 
 if __name__ == "__main__":
